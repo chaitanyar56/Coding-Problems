@@ -7,9 +7,14 @@ class point {
   public:
     int x;
     int y;
+    void set_values(int, int);
     point( int x = 0, int y = 0); // constructor
     point operator-(const point&) const;  // operator+()
 };
+
+void point::set_values(int a, int b){
+  x = a; y = b;
+}
 
 // define constructor
 point::point( int a, int b){
@@ -63,9 +68,9 @@ bool onSegment(point a, point b, point c, int crossValue){
   if ( crossValue == 0 && c.x >= min(a.x,b.x) && c.y >= min(a.y,b.x) && c.x <= max(a.x,b.x) && c.y <= max(a.y,b.x) ){
     return true;
   }
+
   return false;
 }
-
 
 
 bool checkIntersection(point A, point B, point C, point D){
@@ -92,40 +97,60 @@ bool checkIntersection(point A, point B, point C, point D){
   }
 }
 
+// checking a point inside a polygon by ray tracing 
+bool isInside(vector<point> polygonInd, point A){
+
+  int n = polygonInd.size();
+
+  class point pInf(10000,A.y);
+
+  if (n < 3){
+    return false;
+  }
+
+  int countIntersection = 0, i = 0, next;
+
+  do {
+
+    next = (i+1)%n;
+
+    if(checkIntersection(polygonInd[i],polygonInd[next],A, pInf)){
+      // define AB, BC to calculate cross product
+      point AB = polygonInd[next] - polygonInd[i];
+      point BC = A - polygonInd[next];
+      // if point lies on the sides of the polygon return true
+      if(onSegment(polygonInd[i],polygonInd[next],A,crossProductZ(AB,BC))){
+        return true;
+      }
+
+      countIntersection++;
+    }
+
+    i = next;
+
+  } while(i != 0);
+
+  return countIntersection&1; // check if count is odd
+}
 
 //test
 int main(){
-  // parallel case
-  class point p1(1,1);
-  class point p2(10,1);
-  class point q1(1,2);
-  class point q2(10,2);
 
-  checkIntersection(p1, p2, q1, q2)? cout << "Yes\n": cout << "No\n";
 
-  //proper intersection case
-  p1 = point(0,10);
-  p2 = point(10,0);
-  q1 = point(0,0);
-  q2 = point(10,10);
+  vector<point> poly1;
 
-  checkIntersection(p1, p2, q1, q2)? cout << "Yes\n": cout << "No\n";
+  point temp(1,1);
+  poly1.push_back(temp);
+  temp.set_values(-1,1);
+  poly1.push_back(temp);
+  temp.set_values(-1,-1);
+  poly1.push_back(temp);
+  temp.set_values(1,-1);
+  poly1.push_back(temp);
 
-  // no intersection
-  p1 = point(-5,-5);
-  p2 = point(0,0);
-  q1 = point(1,1);
-  q2 = point(10,10);
+  point p(2,1);
 
-  checkIntersection(p1, p2, q1, q2)? cout << "Yes\n": cout << "No\n";
-
-  // improper intersection
-  p1 = point(-5,-5);
-  p2 = point(2,2);
-  q1 = point(1,1);
-  q2 = point(10,10);
-
-  checkIntersection(p1, p2, q1, q2)? cout << "Yes\n": cout << "No\n";
+  isInside(poly1, p)? cout << "Yes\n": cout << "No\n";
 
 
   return 0;
